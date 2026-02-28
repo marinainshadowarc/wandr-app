@@ -1,6 +1,18 @@
-import { trips } from '../data/tripData';
+import { useTrips } from '../hooks/useTrips';
+import { useProfile } from '../hooks/useProfile';
+import LoadingState from '../components/LoadingState';
 
-export default function Home({ onTripSelect }) {
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'GOOD MORNING';
+  if (h < 17) return 'GOOD AFTERNOON';
+  return 'GOOD EVENING';
+}
+
+export default function Home({ onTripSelect, onSignOut }) {
+  const { trips, loading } = useTrips();
+  const { firstName } = useProfile();
+
   return (
     <div className="screen" style={{ padding: '0 0 80px' }}>
       {/* Header */}
@@ -8,28 +20,58 @@ export default function Home({ onTripSelect }) {
         background: 'linear-gradient(160deg, #e8d5b7 0%, #faf6f0 60%)',
         padding: '52px 24px 28px',
       }}>
-        <p style={{ fontSize: 13, color: 'var(--brown)', fontWeight: 500, marginBottom: 6, letterSpacing: 0.5 }}>
-          GOOD MORNING
-        </p>
-        <h1 style={{ fontSize: 26, lineHeight: 1.25, color: 'var(--text-primary)' }}>
-          Welcome, Marina —<br />
-          <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> 🌍
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{ fontSize: 13, color: 'var(--brown)', fontWeight: 500, marginBottom: 6, letterSpacing: 0.5 }}>
+              {greeting()}
+            </p>
+            <h1 style={{ fontSize: 26, lineHeight: 1.25, color: 'var(--text-primary)' }}>
+              Welcome, {firstName} —<br />
+              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> 🌍
+            </h1>
+          </div>
+          <button
+            onClick={onSignOut}
+            style={{
+              marginTop: 4,
+              background: 'rgba(255,255,255,0.6)',
+              border: '1px solid var(--border)',
+              borderRadius: 20,
+              padding: '6px 14px',
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              flexShrink: 0,
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       <div style={{ padding: '0 16px' }}>
-        {/* Upcoming trips */}
+        {/* Trips */}
         <div style={{ marginTop: 24 }}>
           <div className="section-header">
             <h2 className="section-title">Your Trips</h2>
             <button className="section-action">See all</button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {trips.map(trip => (
-              <TripCard key={trip.id} trip={trip} onSelect={() => onTripSelect(trip)} />
-            ))}
-          </div>
+          {loading ? (
+            <LoadingState message="Fetching trips…" />
+          ) : trips.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: 28, marginBottom: 8 }}>🗺️</p>
+              <p style={{ fontSize: 14 }}>No trips yet. Start planning one!</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {trips.map(trip => (
+                <TripCard key={trip.id} trip={trip} onSelect={() => onTripSelect(trip)} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* New trip button */}
@@ -54,73 +96,54 @@ export default function Home({ onTripSelect }) {
         </button>
 
         {/* Quick stats */}
-        <div style={{ marginTop: 28 }}>
-          <h2 className="section-title" style={{ marginBottom: 14 }}>At a glance</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <StatCard label="Trips planned" value="2" icon="✈️" />
-            <StatCard label="Countries" value="2" icon="🌏" />
-            <StatCard label="Travel pals" value="4" icon="👥" />
-            <StatCard label="Days away" value="21" icon="📅" />
+        {!loading && trips.length > 0 && (
+          <div style={{ marginTop: 28 }}>
+            <h2 className="section-title" style={{ marginBottom: 14 }}>At a glance</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <StatCard label="Trips planned" value={trips.length} icon="✈️" />
+              <StatCard label="Countries" value={new Set(trips.map(t => t.destination).filter(Boolean)).size} icon="🌏" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
 function TripCard({ trip, onSelect }) {
-  const pct = Math.round((trip.budgetUsed / trip.budget) * 100);
+  const fmt = d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const dateRange = trip.start_date && trip.end_date
+    ? `${fmt(trip.start_date)} – ${fmt(trip.end_date)}`
+    : trip.start_date ? fmt(trip.start_date) : '';
+
+  const totalDays = trip.start_date && trip.end_date
+    ? Math.round((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
+    : null;
+
   return (
     <div
       className="card"
       onClick={onSelect}
       style={{ cursor: 'pointer', overflow: 'hidden', padding: 0 }}
     >
-      {/* Color band */}
-      <div style={{
-        height: 8,
-        background: `linear-gradient(90deg, var(--brown-light), var(--sand))`,
-      }} />
-
+      <div style={{ height: 8, background: 'linear-gradient(90deg, var(--brown-light), var(--sand))' }} />
       <div style={{ padding: '18px 20px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 22 }}>{trip.emoji}</span>
-              <h3 style={{ fontSize: 18, color: 'var(--text-primary)' }}>{trip.name}</h3>
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>{trip.dates}</p>
+            <h3 style={{ fontSize: 18, color: 'var(--text-primary)', marginBottom: 4 }}>{trip.name}</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>{dateRange}</p>
           </div>
           <span style={{
             fontSize: 11, fontWeight: 600, color: 'var(--brown)',
-            background: 'var(--cream-dark)', padding: '4px 10px', borderRadius: 20
+            background: 'var(--cream-dark)', padding: '4px 10px', borderRadius: 20,
           }}>
             Active
           </span>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
-          <Stat icon="👥" label={`${trip.people} people`} />
-          <Stat icon="📅" label={`${trip.daysPlanned}/${trip.totalDays} days`} />
-          <Stat icon="💰" label={`$${(trip.budgetUsed / 1000).toFixed(1)}k used`} />
-        </div>
-
-        {/* Budget bar */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Budget</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{pct}% of ${(trip.budget / 1000).toFixed(1)}k</span>
-          </div>
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{
-                width: `${pct}%`,
-                background: pct > 80 ? '#c9606e' : 'var(--brown-light)',
-              }}
-            />
-          </div>
+        <div style={{ display: 'flex', gap: 20 }}>
+          {trip.destination && <Stat icon="📍" label={trip.destination} />}
+          {totalDays && <Stat icon="📅" label={`${totalDays} days`} />}
         </div>
       </div>
     </div>
