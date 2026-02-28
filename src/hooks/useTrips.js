@@ -18,5 +18,22 @@ export function useTrips() {
       });
   }, []);
 
-  return { trips, loading, error };
+  const addTrip = async ({ name, destination, start_date, end_date, cover_color }, profileId) => {
+    const { data: trip, error: tripErr } = await supabase
+      .from('trips')
+      .insert({ name, destination, start_date, end_date, cover_color })
+      .select()
+      .single();
+    if (tripErr) throw tripErr;
+
+    const { error: memberErr } = await supabase
+      .from('trip_members')
+      .insert({ trip_id: trip.id, user_id: profileId, role: 'Owner' });
+    if (memberErr) throw memberErr;
+
+    setTrips(prev => [trip, ...prev]);
+    return trip;
+  };
+
+  return { trips, loading, error, addTrip };
 }

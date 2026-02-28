@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useTrips } from '../hooks/useTrips';
 import { useProfile } from '../hooks/useProfile';
 import LoadingState from '../components/LoadingState';
+import NewTripModal from '../components/NewTripModal';
 
 function greeting() {
   const h = new Date().getHours();
@@ -10,8 +12,9 @@ function greeting() {
 }
 
 export default function Home({ onTripSelect, onSignOut }) {
-  const { trips, loading } = useTrips();
+  const { trips, loading, addTrip } = useTrips();
   const { firstName } = useProfile();
+  const [showNewTrip, setShowNewTrip] = useState(false);
 
   return (
     <div className="screen" style={{ padding: '0 0 80px' }}>
@@ -76,7 +79,7 @@ export default function Home({ onTripSelect, onSignOut }) {
 
         {/* New trip button */}
         <button
-          onClick={() => alert('New trip flow coming soon!')}
+          onClick={() => setShowNewTrip(true)}
           style={{
             marginTop: 20,
             width: '100%',
@@ -106,6 +109,13 @@ export default function Home({ onTripSelect, onSignOut }) {
           </div>
         )}
       </div>
+
+      {showNewTrip && (
+        <NewTripModal
+          onSave={addTrip}
+          onClose={() => setShowNewTrip(false)}
+        />
+      )}
     </div>
   );
 }
