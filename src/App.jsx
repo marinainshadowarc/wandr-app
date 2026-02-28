@@ -1,3 +1,4 @@
+// v1.1.0
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import BottomNav from './components/BottomNav';
