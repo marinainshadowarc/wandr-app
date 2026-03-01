@@ -35,5 +35,14 @@ export function useTrips() {
     return trip;
   };
 
-  return { trips, loading, error, addTrip };
+  const deleteTrip = async (tripId) => {
+    const { error } = await supabase
+      .from('trips')
+      .delete()
+      .eq('id', tripId);
+    if (error) throw error;
+    setTrips(prev => prev.filter(t => t.id !== tripId));
+  };
+
+  return { trips, loading, error, addTrip, deleteTrip };
 }
