@@ -1,13 +1,27 @@
 import { useState } from 'react';
 import { useItinerary } from '../hooks/useItinerary';
 import LoadingState from '../components/LoadingState';
+import NewItineraryItemModal from '../components/NewItineraryItemModal';
 
-const TYPE_ICONS = { flight: '✈️', hotel: '🏨', food: '🍜', activity: '🎯' };
+const TYPE_ICONS = { flight: '✈️', hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
 
 export default function Itinerary({ tripId, tripName, tripDates }) {
-  const { days, loading, error } = useItinerary(tripId);
-  const [activeDay, setActiveDay] = useState(1);
+  const { days, loading, error, addItem } = useItinerary(tripId);
+  const [activeDay, setActiveDay]     = useState(1);
+  const [showModal, setShowModal]     = useState(false);
+  const [modalDay,  setModalDay]      = useState(1);
+
   const currentDay = days.find(d => d.day === activeDay) ?? days[0];
+
+  const openModal = (day) => {
+    setModalDay(day);
+    setShowModal(true);
+  };
+
+  const handleSave = async (payload) => {
+    const item = await addItem(payload);
+    setActiveDay(item.day_number);
+  };
 
   return (
     <div className="screen">
@@ -15,7 +29,19 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
         <p style={{ fontSize: 12, color: 'var(--brown)', fontWeight: 500, letterSpacing: 0.8, marginBottom: 4 }}>
           {tripName ?? 'TRIP'}{tripDates ? ` · ${tripDates}` : ''}
         </p>
-        <h1 style={{ fontSize: 28, color: 'var(--text-primary)' }}>Itinerary</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 28, color: 'var(--text-primary)' }}>Itinerary</h1>
+          <button
+            onClick={() => openModal(activeDay || 1)}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'var(--text-primary)', color: 'var(--cream)',
+              border: 'none', fontSize: 22, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              lineHeight: 1, fontWeight: 300,
+            }}
+          >+</button>
+        </div>
       </div>
 
       {loading ? (
@@ -25,7 +51,19 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
       ) : days.length === 0 ? (
         <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
           <p style={{ fontSize: 28, marginBottom: 8 }}>📅</p>
-          <p>No activities planned yet.</p>
+          <p style={{ marginBottom: 20 }}>No activities planned yet.</p>
+          <button
+            onClick={() => openModal(1)}
+            style={{
+              padding: '12px 28px',
+              background: 'var(--text-primary)', color: 'var(--cream)',
+              border: 'none', borderRadius: 'var(--radius)',
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 15, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            + Add first activity
+          </button>
         </div>
       ) : (
         <>
@@ -44,7 +82,7 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
                   border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                   transition: 'all 0.2s',
                   background: activeDay === day.day ? 'var(--text-primary)' : 'var(--cream-dark)',
-                  color: activeDay === day.day ? 'var(--cream)' : 'var(--text-secondary)',
+                  color:      activeDay === day.day ? 'var(--cream)'        : 'var(--text-secondary)',
                 }}
               >
                 Day {day.day}
@@ -70,19 +108,28 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
               </div>
 
               <button
+                onClick={() => openModal(currentDay.day)}
                 style={{
                   marginTop: 16, width: '100%', padding: '14px',
                   background: 'transparent', color: 'var(--brown)',
                   border: '2px dashed var(--sand)', borderRadius: 'var(--radius)',
                   fontSize: 14, fontWeight: 500, cursor: 'pointer',
                 }}
-                onClick={() => alert('Add activity coming soon!')}
               >
                 + Add activity
               </button>
             </div>
           )}
         </>
+      )}
+
+      {showModal && (
+        <NewItineraryItemModal
+          tripId={tripId}
+          defaultDay={modalDay}
+          onSave={handleSave}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );
@@ -130,8 +177,8 @@ function TimelineItem({ item, isLast }) {
               )}
               {expanded && (
                 <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {item.location          && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📍 {item.location}</p>}
-                  {item.notes             && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📝 {item.notes}</p>}
+                  {item.location           && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📍 {item.location}</p>}
+                  {item.notes              && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📝 {item.notes}</p>}
                   {item.confirmation_number && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔖 {item.confirmation_number}</p>}
                   {item.type === 'flight' && item.flight_number && (
                     <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>

@@ -135,7 +135,8 @@ h1, h2, h3 {
 .tag-flight   { background: #e8f0fe; color: #3d5a9d; }
 .tag-hotel    { background: #fce8d8; color: #9d5a2e; }
 .tag-food     { background: #fef3e0; color: #9d7a1e; }
-.tag-activity { background: #e8f5e8; color: #3d7a45; }
+.tag-activity  { background: #e8f5e8; color: #3d7a45; }
+.tag-transport { background: #f0e8fe; color: #5a3d9d; }
 
 /* Progress bar */
 .progress-bar {

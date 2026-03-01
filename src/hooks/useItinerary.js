@@ -38,5 +38,29 @@ export function useItinerary(tripId) {
       });
   }, [tripId]);
 
-  return { days, loading, error };
+  const addItem = async (itemData) => {
+    const { data: item, error: err } = await supabase
+      .from('itinerary_items')
+      .insert(itemData)
+      .select()
+      .single();
+    if (err) throw err;
+
+    const formatted = { ...item, time: fmtTime(item.time) };
+
+    setDays(prev => {
+      const existing = prev.find(g => g.day === item.day_number);
+      if (existing) {
+        const newItems = [...existing.items, formatted]
+          .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        return prev.map(g => g.day === item.day_number ? { ...g, items: newItems } : g);
+      }
+      return [...prev, { day: item.day_number, items: [formatted] }]
+        .sort((a, b) => a.day - b.day);
+    });
+
+    return formatted;
+  };
+
+  return { days, loading, error, addItem };
 }
