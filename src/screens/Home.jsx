@@ -4,6 +4,7 @@ import { useProfile } from '../hooks/useProfile';
 import LoadingState from '../components/LoadingState';
 import NewTripModal from '../components/NewTripModal';
 import PlaneSticker from '../components/PlaneSticker';
+import EarthSticker from '../components/EarthSticker';
 
 function greeting() {
   const h = new Date().getHours();
