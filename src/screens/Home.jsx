@@ -46,7 +46,7 @@ export default function Home({ onTripSelect, onSignOut }) {
             </p>
             <h1 style={{ fontSize: 26, lineHeight: 1.25, color: 'var(--text-primary)' }}>
               Welcome, {firstName} —<br />
-              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> 🌍
+              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> <EarthSticker size={28} />
             </h1>
           </div>
           <button

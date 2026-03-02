@@ -1,3 +1,5 @@
+import EarthSticker from './EarthSticker';
+
 export default function LoadingState({ message = 'Loading…' }) {
   return (
     <div style={{
@@ -8,7 +10,7 @@ export default function LoadingState({ message = 'Loading…' }) {
       padding: '80px 24px',
       gap: 12,
     }}>
-      <div style={{ fontSize: 32 }}>🌍</div>
+      <EarthSticker size={44} />
       <p style={{
         fontFamily: "'Playfair Display', serif",
         fontSize: 16,

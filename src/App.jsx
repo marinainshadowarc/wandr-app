@@ -1,5 +1,6 @@
 // v1.1.0
 import { useState } from 'react';
+import EarthSticker from './components/EarthSticker';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import BottomNav from './components/BottomNav';
 import Home from './screens/Home';
@@ -25,7 +26,7 @@ function AppShell() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexDirection: 'column', gap: 12,
       }}>
-        <div style={{ fontSize: 36 }}>🌍</div>
+        <EarthSticker size={52} />
         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: 'var(--text-muted)' }}>
           Loading…
         </p>

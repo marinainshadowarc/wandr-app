@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import EarthSticker from '../components/EarthSticker';
 
 export default function Signup({ onSwitch }) {
   const [name, setName] = useState('');
@@ -79,7 +80,7 @@ export default function Signup({ onSwitch }) {
     }}>
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ fontSize: 40, marginBottom: 8 }}>🌍</div>
+        <div style={{ marginBottom: 8 }}><EarthSticker size={56} /></div>
         <h1 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 36,
