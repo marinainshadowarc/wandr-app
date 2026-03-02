@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useProfile } from '../hooks/useProfile';
+import PlaneSticker from './PlaneSticker';
 
 const COVER_COLORS = [
   '#e8d5b7', // warm sand
@@ -184,7 +185,7 @@ export default function NewTripModal({ onSave, onClose }) {
               letterSpacing: 0.3, transition: 'background 0.2s',
             }}
           >
-            {saving ? 'Creating…' : 'Create trip ✈️'}
+            {saving ? 'Creating…' : <span>Create trip <PlaneSticker size={18} /></span>}
           </button>
         </div>
       </div>
