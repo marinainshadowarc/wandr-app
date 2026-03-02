@@ -1,4 +1,4 @@
-export default function PlaneSticker({ size = 16 }) {
+export default function PlaneSticker({ size = 40 }) {
   return (
     <img
       src="/airplane-sticker.png"
