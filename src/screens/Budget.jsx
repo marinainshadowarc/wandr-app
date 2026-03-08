@@ -35,6 +35,16 @@ export default function Budget({ tripId, tripName, tripDates }) {
 
   const barColor = pct >= 100 ? '#c0392b' : pct >= 90 ? '#c0392b' : pct >= 70 ? '#d4865a' : '#5a9e6f';
 
+  if (!tripId) return (
+    <div className="screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center' }}>
+      <div>
+        <p style={{ fontSize: 32, marginBottom: 12 }}>💰</p>
+        <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>No trip selected</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Go to Home and tap a trip to view its budget.</p>
+      </div>
+    </div>
+  );
+
   if (loading) return <div className="screen"><LoadingState message="Loading budget…" /></div>;
   if (error)   return <div className="screen" style={{ padding: 24, color: 'var(--brown)' }}>{error}</div>;
 
@@ -65,36 +75,52 @@ export default function Budget({ tripId, tripName, tripDates }) {
             {/* Budget target */}
             <div style={{ textAlign: 'right' }}>
               {editingBudget ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 14, color: 'rgba(250,246,240,0.7)' }}>$</span>
-                  <input
-                    type="number"
-                    min={0}
-                    autoFocus
-                    value={budgetInput}
-                    onChange={e => setBudgetInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') saveBudget(); if (e.key === 'Escape') setEditingBudget(false); }}
-                    style={{
-                      width: 100, padding: '6px 10px',
-                      background: 'rgba(255,255,255,0.12)',
-                      border: '1.5px solid rgba(255,255,255,0.3)',
-                      borderRadius: 8, color: 'var(--cream)',
-                      fontSize: 15, fontFamily: 'Inter, sans-serif',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={saveBudget}
-                    disabled={savingBudget}
-                    style={{
-                      padding: '6px 12px',
-                      background: 'var(--brown-light)', color: 'var(--cream)',
-                      border: 'none', borderRadius: 8,
-                      fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    }}
-                  >
-                    {savingBudget ? '…' : 'Save'}
-                  </button>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 16, color: 'rgba(250,246,240,0.8)' }}>$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      autoFocus
+                      value={budgetInput}
+                      onChange={e => setBudgetInput(e.target.value.replace(/[^0-9.]/g, ''))}
+                      onKeyDown={e => { if (e.key === 'Enter') saveBudget(); if (e.key === 'Escape') setEditingBudget(false); }}
+                      style={{
+                        width: 120, padding: '10px 12px',
+                        background: 'rgba(255,255,255,0.15)',
+                        border: '1.5px solid rgba(255,255,255,0.4)',
+                        borderRadius: 10, color: '#ffffff',
+                        fontSize: 18, fontFamily: 'Inter, sans-serif',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => setEditingBudget(false)}
+                      style={{
+                        padding: '8px 14px',
+                        background: 'rgba(255,255,255,0.1)', color: 'rgba(250,246,240,0.7)',
+                        border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8,
+                        fontSize: 13, cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveBudget}
+                      disabled={savingBudget}
+                      style={{
+                        padding: '8px 16px',
+                        background: 'var(--coral)', color: '#ffffff',
+                        border: 'none', borderRadius: 8,
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                      }}
+                    >
+                      {savingBudget ? '…' : 'Save'}
+                    </button>
+                  </div>
                 </div>
               ) : hasBudget ? (
                 <>
