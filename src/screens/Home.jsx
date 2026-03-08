@@ -126,7 +126,7 @@ export default function Home({ onTripSelect, onSignOut }) {
             <h2 className="section-title" style={{ marginBottom: 14 }}>At a glance</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <StatCard label="Trips planned" value={trips.length} icon={<PlaneSticker size={40} />} />
-              <StatCard label="Countries" value={new Set(trips.map(t => t.destination).filter(Boolean)).size} icon="🌏" />
+              <StatCard label="Countries" value={new Set(trips.map(t => t.destination).filter(Boolean)).size} icon={<EarthSticker size={28} />} />
             </div>
           </div>
         )}
