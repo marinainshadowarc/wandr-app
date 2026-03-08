@@ -1,7 +1,7 @@
 export default function EarthSticker({ size = 44 }) {
   return (
     <img
-      src="/earth_sticker.png"
+      src="/earth.png"
       alt="🌍"
       style={{
         width: size,
