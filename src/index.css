@@ -7,19 +7,21 @@
 }
 
 :root {
-  --cream: #faf6f0;
-  --cream-dark: #f2ebe0;
-  --sand: #e8d5b7;
-  --sand-dark: #d4c5b0;
-  --brown-light: #c9a96e;
-  --brown: #a0856a;
-  --brown-dark: #7a6350;
-  --text-primary: #2d2519;
-  --text-secondary: #6b5a4a;
-  --text-muted: #9e8c7d;
+  --cream: #f0f2ff;
+  --cream-dark: #e4e8ff;
+  --sand: #c7d2fe;
+  --sand-dark: #a5b4fc;
+  --brown-light: #ff6b4a;
+  --brown: #4338ca;
+  --brown-dark: #312e81;
+  --text-primary: #1e1b4b;
+  --text-secondary: #4338ca;
+  --text-muted: #7c83c8;
   --white: #ffffff;
-  --border: #e8ddd0;
-  --success: #7a9e7e;
+  --border: #dde1ff;
+  --coral: #ff6b4a;
+  --gold: #ffd166;
+  --success: #10b981;
   --nav-height: 68px;
   --radius: 16px;
   --radius-sm: 10px;
@@ -98,7 +100,7 @@ h1, h2, h3 {
 }
 
 .nav-item.active {
-  color: var(--brown-light);
+  color: var(--coral);
 }
 
 .nav-item svg {
@@ -117,7 +119,7 @@ h1, h2, h3 {
   background: var(--white);
   border-radius: var(--radius);
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(67,56,202,0.08);
 }
 
 /* Tags */
@@ -132,11 +134,11 @@ h1, h2, h3 {
   letter-spacing: 0.3px;
 }
 
-.tag-flight   { background: #e8f0fe; color: #3d5a9d; }
-.tag-hotel    { background: #fce8d8; color: #9d5a2e; }
-.tag-food     { background: #fef3e0; color: #9d7a1e; }
-.tag-activity  { background: #e8f5e8; color: #3d7a45; }
-.tag-transport { background: #f0e8fe; color: #5a3d9d; }
+.tag-flight   { background: #e0e7ff; color: #3730a3; }
+.tag-hotel    { background: #ffe4e6; color: #be123c; }
+.tag-food     { background: #fef9c3; color: #a16207; }
+.tag-activity  { background: #d1fae5; color: #065f46; }
+.tag-transport { background: #fce7f3; color: #9d174d; }
 
 /* Progress bar */
 .progress-bar {
@@ -188,7 +190,7 @@ h1, h2, h3 {
 
 .section-action {
   font-size: 13px;
-  color: var(--brown-light);
+  color: var(--coral);
   cursor: pointer;
   font-weight: 500;
   background: none;

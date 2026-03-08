@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-const MEMBER_COLORS = ['#c9a96e', '#a0856a', '#7a9e9f', '#b07d62', '#8b9e8b', '#c4a882'];
+const MEMBER_COLORS = ['#6366f1', '#ff6b4a', '#10b981', '#f59e0b', '#a855f7', '#06b6d4'];
 
 export function usePals(tripId) {
   const [members, setMembers] = useState([]);

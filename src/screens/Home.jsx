@@ -39,7 +39,7 @@ export default function Home({ onTripSelect, onSignOut }) {
     <div className="screen" style={{ padding: '0 0 80px' }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(160deg, #e8d5b7 0%, #faf6f0 60%)',
+        background: 'linear-gradient(160deg, #c7d2fe 0%, #f0f2ff 60%)',
         padding: '52px 24px 28px',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -260,8 +260,8 @@ function TripCard({ trip, onSelect, onDelete }) {
         </div>
 
         <div style={{ display: 'flex', gap: 20 }}>
-          {trip.destination && <Stat icon={<PinSticker size={14} />} label={trip.destination} />}
-          {totalDays && <Stat icon={<CalendarSticker size={14} />} label={`${totalDays} days`} />}
+          {trip.destination && <Stat icon={<PinSticker size={48} />} label={trip.destination} />}
+          {totalDays && <Stat icon={<CalendarSticker size={48} />} label={`${totalDays} days`} />}
         </div>
       </div>
     </div>

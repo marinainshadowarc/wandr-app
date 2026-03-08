@@ -3,12 +3,12 @@ import { useProfile } from '../hooks/useProfile';
 import PlaneSticker from './PlaneSticker';
 
 const COVER_COLORS = [
-  '#e8d5b7', // warm sand
-  '#c9a96e', // golden
-  '#d4a99a', // dusty rose
-  '#7a9e9f', // teal sage
-  '#8b9e8b', // sage green
-  '#a0856a', // clay
+  '#ff6b4a', // coral
+  '#6366f1', // indigo
+  '#10b981', // teal
+  '#f59e0b', // amber
+  '#a855f7', // purple
+  '#06b6d4', // cyan
 ];
 
 export default function NewTripModal({ onSave, onClose }) {

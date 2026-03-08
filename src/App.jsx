@@ -22,7 +22,7 @@ function AppShell() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(160deg, #e8d5b7 0%, #faf6f0 55%)',
+        background: 'linear-gradient(160deg, #c7d2fe 0%, #f0f2ff 55%)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexDirection: 'column', gap: 12,
       }}>

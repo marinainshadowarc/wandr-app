@@ -9,11 +9,11 @@ const TYPE_LABELS = {
   transport: 'Transport',
 };
 const TYPE_COLORS = {
-  flight:    '#c9a96e',
-  hotel:     '#a0856a',
-  food:      '#7a9e9f',
-  activity:  '#b07d62',
-  transport: '#8b9e8b',
+  flight:    '#6366f1',
+  hotel:     '#ff6b4a',
+  food:      '#f59e0b',
+  activity:  '#10b981',
+  transport: '#a855f7',
 };
 
 export function useBudget(tripId) {
@@ -83,7 +83,7 @@ export function useBudget(tripId) {
     .sort((a, b) => b.total - a.total)
     .map(c => ({
       ...c,
-      color:    TYPE_COLORS[c.type] ?? '#c4a882',
+      color:    TYPE_COLORS[c.type] ?? '#6366f1',
       sharePct: totalSpent > 0 ? Math.round((c.total / totalSpent) * 100) : 0,
     }));
 

@@ -195,15 +195,15 @@ function TimelineItem({ item, isLast, onEdit }) {
                   {TYPE_ICONS[item.type] ?? '📌'} {item.type}
                 </span>
                 {item.is_booked
-                  ? <span className="tag" style={{ background: '#e8f5e8', color: '#3d7a45' }}>✓ Booked</span>
-                  : <span className="tag" style={{ background: '#fef3e0', color: '#9d7a1e' }}>Unbooked</span>
+                  ? <span className="tag" style={{ background: '#d1fae5', color: '#065f46' }}>✓ Booked</span>
+                  : <span className="tag" style={{ background: '#fef9c3', color: '#a16207' }}>Unbooked</span>
                 }
               </div>
               <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
                 {item.title}
               </p>
               {item.location && (
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}><PinSticker size={14} /> {item.location}</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}><PinSticker size={48} /> {item.location}</p>
               )}
               {item.notes && (
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>📝 {item.notes}</p>
