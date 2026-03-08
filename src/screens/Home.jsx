@@ -5,6 +5,8 @@ import LoadingState from '../components/LoadingState';
 import NewTripModal from '../components/NewTripModal';
 import PlaneSticker from '../components/PlaneSticker';
 import EarthSticker from '../components/EarthSticker';
+import PinSticker from '../components/PinSticker';
+import CalendarSticker from '../components/CalendarSticker';
 
 function greeting() {
   const h = new Date().getHours();
@@ -258,8 +260,8 @@ function TripCard({ trip, onSelect, onDelete }) {
         </div>
 
         <div style={{ display: 'flex', gap: 20 }}>
-          {trip.destination && <Stat icon="📍" label={trip.destination} />}
-          {totalDays && <Stat icon="📅" label={`${totalDays} days`} />}
+          {trip.destination && <Stat icon={<PinSticker size={14} />} label={trip.destination} />}
+          {totalDays && <Stat icon={<CalendarSticker size={14} />} label={`${totalDays} days`} />}
         </div>
       </div>
     </div>

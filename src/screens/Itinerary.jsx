@@ -3,6 +3,8 @@ import { useItinerary } from '../hooks/useItinerary';
 import LoadingState from '../components/LoadingState';
 import NewItineraryItemModal from '../components/NewItineraryItemModal';
 import PlaneSticker from '../components/PlaneSticker';
+import PinSticker from '../components/PinSticker';
+import CalendarSticker from '../components/CalendarSticker';
 
 const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
 
@@ -58,7 +60,7 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
         <div style={{ padding: 24, color: 'var(--brown)' }}>{error}</div>
       ) : days.length === 0 ? (
         <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: 28, marginBottom: 8 }}>📅</p>
+          <CalendarSticker size={48} />
           <p style={{ marginBottom: 20 }}>No activities planned yet.</p>
           <button
             onClick={() => openAdd(1)}
@@ -201,7 +203,7 @@ function TimelineItem({ item, isLast, onEdit }) {
                 {item.title}
               </p>
               {item.location && (
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📍 {item.location}</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}><PinSticker size={14} /> {item.location}</p>
               )}
               {item.notes && (
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>📝 {item.notes}</p>
