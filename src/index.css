@@ -7,10 +7,10 @@
 }
 
 :root {
-  --cream: #f0f2ff;
-  --cream-dark: #e4e8ff;
-  --sand: #c7d2fe;
-  --sand-dark: #a5b4fc;
+  --cream: #fff4ee;
+  --cream-dark: #ffe8d6;
+  --sand: #ffd4bc;
+  --sand-dark: #ffb899;
   --brown-light: #ff6b4a;
   --brown: #4338ca;
   --brown-dark: #312e81;
@@ -18,7 +18,7 @@
   --text-secondary: #4338ca;
   --text-muted: #7c83c8;
   --white: #ffffff;
-  --border: #dde1ff;
+  --border: #ffddd0;
   --coral: #ff6b4a;
   --gold: #ffd166;
   --success: #10b981;

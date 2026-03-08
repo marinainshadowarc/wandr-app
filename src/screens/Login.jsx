@@ -20,7 +20,7 @@ export default function Login({ onSwitch }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #c7d2fe 0%, #f0f2ff 55%)',
+      background: 'linear-gradient(160deg, #ffd4bc 0%, #fff4ee 55%)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',

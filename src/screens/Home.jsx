@@ -39,7 +39,7 @@ export default function Home({ onTripSelect, onSignOut }) {
     <div className="screen" style={{ padding: '0 0 80px' }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(160deg, #c7d2fe 0%, #f0f2ff 60%)',
+        background: 'linear-gradient(160deg, #ffd4bc 0%, #fff4ee 60%)',
         padding: '52px 24px 28px',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

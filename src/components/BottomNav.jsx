@@ -69,7 +69,7 @@ export default function BottomNav({ active, onNav, onHome }) {
               <div style={{
                 width: 52, height: 52,
                 borderRadius: '50%',
-                background: active === 'home' ? 'var(--text-primary)' : 'var(--brown-light)',
+                background: 'var(--text-primary)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
                 color: 'white',
