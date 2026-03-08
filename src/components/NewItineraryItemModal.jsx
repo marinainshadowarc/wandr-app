@@ -14,59 +14,74 @@ const PLACEHOLDERS = {
   transport: 'e.g. Shinkansen to Kyoto',
 };
 
-export default function NewItineraryItemModal({ tripId, defaultDay, onSave, onClose }) {
-  const [form, setForm] = useState({
-    title: '',
-    type: 'activity',
-    day_number: defaultDay ?? 1,
-    time: '09:00',
-    location: '',
-    cost: '',
-    currency: 'AUD',
-    is_booked: false,
-    notes: '',
-    confirmation_number: '',
-    flight_number: '',
-    airline: '',
-    departure_airport: '',
-    arrival_airport: '',
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState('');
+// initialData = existing item (edit mode) | undefined (add mode)
+export default function NewItineraryItemModal({ tripId, defaultDay, initialData, onSave, onDelete, onClose }) {
+  const isEdit = !!initialData;
+
+  const [form, setForm] = useState(() => ({
+    title:               initialData?.title               ?? '',
+    type:                initialData?.type                ?? 'activity',
+    day_number:          initialData?.day_number          ?? defaultDay ?? 1,
+    time:                initialData?.time                ?? '09:00',
+    location:            initialData?.location            ?? '',
+    cost:                initialData?.cost                ?? '',
+    currency:            initialData?.currency            ?? 'AUD',
+    is_booked:           initialData?.is_booked           ?? false,
+    notes:               initialData?.notes               ?? '',
+    confirmation_number: initialData?.confirmation_number ?? '',
+    flight_number:       initialData?.flight_number       ?? '',
+    airline:             initialData?.airline             ?? '',
+    departure_airport:   initialData?.departure_airport   ?? '',
+    arrival_airport:     initialData?.arrival_airport     ?? '',
+  }));
+
+  const [saving,   setSaving]   = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error,    setError]    = useState('');
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
+  const buildPayload = () => ({
+    ...(isEdit ? {} : { trip_id: tripId }),
+    title:               form.title.trim(),
+    type:                form.type,
+    day_number:          Number(form.day_number),
+    time:                form.time || null,
+    location:            form.location.trim()            || null,
+    cost:                form.cost !== '' ? Number(form.cost) : 0,
+    currency:            form.currency,
+    is_booked:           form.is_booked,
+    notes:               form.notes.trim()               || null,
+    confirmation_number: form.confirmation_number.trim() || null,
+    flight_number:       form.type === 'flight' ? form.flight_number.trim()     || null : null,
+    airline:             form.type === 'flight' ? form.airline.trim()           || null : null,
+    departure_airport:   form.type === 'flight' ? form.departure_airport.trim() || null : null,
+    arrival_airport:     form.type === 'flight' ? form.arrival_airport.trim()   || null : null,
+  });
+
   const handleSave = async () => {
-    if (!form.title.trim())                    { setError('Title is required.');          return; }
-    if (!form.day_number || form.day_number < 1) { setError('Day must be at least 1.');   return; }
+    if (!form.title.trim())                      { setError('Title is required.');        return; }
+    if (!form.day_number || form.day_number < 1) { setError('Day must be at least 1.');  return; }
 
     setSaving(true);
     setError('');
-
-    const payload = {
-      trip_id:             tripId,
-      title:               form.title.trim(),
-      type:                form.type,
-      day_number:          Number(form.day_number),
-      time:                form.time || null,
-      location:            form.location.trim()            || null,
-      cost:                form.cost !== '' ? Number(form.cost) : 0,
-      currency:            form.currency,
-      is_booked:           form.is_booked,
-      notes:               form.notes.trim()               || null,
-      confirmation_number: form.confirmation_number.trim() || null,
-      flight_number:       form.type === 'flight' ? form.flight_number.trim()       || null : null,
-      airline:             form.type === 'flight' ? form.airline.trim()             || null : null,
-      departure_airport:   form.type === 'flight' ? form.departure_airport.trim()   || null : null,
-      arrival_airport:     form.type === 'flight' ? form.arrival_airport.trim()     || null : null,
-    };
-
     try {
-      await onSave(payload);
+      await onSave(buildPayload());
       onClose();
     } catch (e) {
       setError(e.message ?? 'Something went wrong.');
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await onDelete();
+      onClose();
+    } catch (e) {
+      setError(e.message ?? 'Could not delete.');
+      setDeleting(false);
     }
   };
 
@@ -100,7 +115,7 @@ export default function NewItineraryItemModal({ tripId, defaultDay, onSave, onCl
           padding: '16px 24px 20px', borderBottom: '1px solid var(--border)',
         }}>
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: 'var(--text-primary)' }}>
-            Add Activity
+            {isEdit ? 'Edit Activity' : 'Add Activity'}
           </h2>
           <button
             onClick={onClose}
@@ -265,12 +280,14 @@ export default function NewItineraryItemModal({ tripId, defaultDay, onSave, onCl
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <Field label="From" slim>
                   <input type="text" placeholder="SYD"
-                    value={form.departure_airport} onChange={e => set('departure_airport', e.target.value.toUpperCase())}
+                    value={form.departure_airport}
+                    onChange={e => set('departure_airport', e.target.value.toUpperCase())}
                     style={{ ...inputStyle, textTransform: 'uppercase', letterSpacing: 1 }} />
                 </Field>
                 <Field label="To" slim>
                   <input type="text" placeholder="NRT"
-                    value={form.arrival_airport} onChange={e => set('arrival_airport', e.target.value.toUpperCase())}
+                    value={form.arrival_airport}
+                    onChange={e => set('arrival_airport', e.target.value.toUpperCase())}
                     style={{ ...inputStyle, textTransform: 'uppercase', letterSpacing: 1 }} />
                 </Field>
               </div>
@@ -302,7 +319,7 @@ export default function NewItineraryItemModal({ tripId, defaultDay, onSave, onCl
           {/* Save */}
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || deleting}
             style={{
               width: '100%', padding: '16px',
               background: saving ? 'var(--text-secondary)' : 'var(--text-primary)',
@@ -311,10 +328,31 @@ export default function NewItineraryItemModal({ tripId, defaultDay, onSave, onCl
               fontSize: 16, fontWeight: 600,
               cursor: saving ? 'default' : 'pointer',
               letterSpacing: 0.3, transition: 'background 0.2s',
+              marginBottom: isEdit ? 12 : 0,
             }}
           >
-            {saving ? 'Saving…' : 'Add to itinerary'}
+            {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add to itinerary'}
           </button>
+
+          {/* Delete — edit mode only */}
+          {isEdit && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              style={{
+                width: '100%', padding: '14px',
+                background: 'transparent',
+                color: deleting ? 'var(--text-muted)' : '#c0392b',
+                border: `1.5px solid ${deleting ? 'var(--border)' : '#e8a0a0'}`,
+                borderRadius: 'var(--radius)',
+                fontSize: 14, fontWeight: 600,
+                cursor: deleting ? 'default' : 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {deleting ? 'Deleting…' : 'Delete activity'}
+            </button>
+          )}
         </div>
       </div>
     </div>

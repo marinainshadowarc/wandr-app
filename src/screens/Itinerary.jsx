@@ -7,21 +7,28 @@ import PlaneSticker from '../components/PlaneSticker';
 const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
 
 export default function Itinerary({ tripId, tripName, tripDates }) {
-  const { days, loading, error, addItem } = useItinerary(tripId);
-  const [activeDay, setActiveDay]     = useState(1);
-  const [showModal, setShowModal]     = useState(false);
-  const [modalDay,  setModalDay]      = useState(1);
+  const { days, loading, error, addItem, updateItem, deleteItem } = useItinerary(tripId);
+  const [activeDay,    setActiveDay]    = useState(1);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [modalDay,     setModalDay]     = useState(1);
+  const [editingItem,  setEditingItem]  = useState(null);
 
   const currentDay = days.find(d => d.day === activeDay) ?? days[0];
 
-  const openModal = (day) => {
-    setModalDay(day);
-    setShowModal(true);
-  };
+  const openAdd = (day) => { setModalDay(day); setShowAddModal(true); };
 
-  const handleSave = async (payload) => {
+  const handleAddSave = async (payload) => {
     const item = await addItem(payload);
     setActiveDay(item.day_number);
+  };
+
+  const handleEditSave = async (payload) => {
+    const item = await updateItem(editingItem.id, payload);
+    setActiveDay(item.day_number);
+  };
+
+  const handleEditDelete = async () => {
+    await deleteItem(editingItem.id);
   };
 
   return (
@@ -33,13 +40,13 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 28, color: 'var(--text-primary)' }}>Itinerary</h1>
           <button
-            onClick={() => openModal(activeDay || 1)}
+            onClick={() => openAdd(activeDay || 1)}
             style={{
               width: 36, height: 36, borderRadius: '50%',
               background: 'var(--text-primary)', color: 'var(--cream)',
               border: 'none', fontSize: 22, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              lineHeight: 1, fontWeight: 300,
+              fontWeight: 300,
             }}
           >+</button>
         </div>
@@ -54,7 +61,7 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
           <p style={{ fontSize: 28, marginBottom: 8 }}>📅</p>
           <p style={{ marginBottom: 20 }}>No activities planned yet.</p>
           <button
-            onClick={() => openModal(1)}
+            onClick={() => openAdd(1)}
             style={{
               padding: '12px 28px',
               background: 'var(--text-primary)', color: 'var(--cream)',
@@ -104,12 +111,17 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
 
               <div style={{ position: 'relative' }}>
                 {currentDay.items.map((item, idx) => (
-                  <TimelineItem key={item.id} item={item} isLast={idx === currentDay.items.length - 1} />
+                  <TimelineItem
+                    key={item.id}
+                    item={item}
+                    isLast={idx === currentDay.items.length - 1}
+                    onEdit={() => setEditingItem(item)}
+                  />
                 ))}
               </div>
 
               <button
-                onClick={() => openModal(currentDay.day)}
+                onClick={() => openAdd(currentDay.day)}
                 style={{
                   marginTop: 16, width: '100%', padding: '14px',
                   background: 'transparent', color: 'var(--brown)',
@@ -124,21 +136,30 @@ export default function Itinerary({ tripId, tripName, tripDates }) {
         </>
       )}
 
-      {showModal && (
+      {/* Add modal */}
+      {showAddModal && (
         <NewItineraryItemModal
           tripId={tripId}
           defaultDay={modalDay}
-          onSave={handleSave}
-          onClose={() => setShowModal(false)}
+          onSave={handleAddSave}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {/* Edit modal */}
+      {editingItem && (
+        <NewItineraryItemModal
+          initialData={editingItem}
+          onSave={handleEditSave}
+          onDelete={handleEditDelete}
+          onClose={() => setEditingItem(null)}
         />
       )}
     </div>
   );
 }
 
-function TimelineItem({ item, isLast }) {
-  const [expanded, setExpanded] = useState(false);
-
+function TimelineItem({ item, isLast, onEdit }) {
   return (
     <div style={{ display: 'flex', marginBottom: isLast ? 0 : 4 }}>
       {/* Time */}
@@ -158,9 +179,13 @@ function TimelineItem({ item, isLast }) {
         {!isLast && <div style={{ flex: 1, width: 2, background: 'var(--border)', marginTop: 4 }} />}
       </div>
 
-      {/* Card */}
+      {/* Card — tap to edit */}
       <div style={{ flex: 1, paddingBottom: isLast ? 0 : 10 }}>
-        <div className="card" onClick={() => setExpanded(!expanded)} style={{ cursor: 'pointer', padding: '14px 16px' }}>
+        <div
+          className="card"
+          onClick={onEdit}
+          style={{ cursor: 'pointer', padding: '14px 16px' }}
+        >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
@@ -172,27 +197,26 @@ function TimelineItem({ item, isLast }) {
                   : <span className="tag" style={{ background: '#fef3e0', color: '#9d7a1e' }}>Unbooked</span>
                 }
               </div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{item.title}</p>
-              {item.location && !expanded && (
+              <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                {item.title}
+              </p>
+              {item.location && (
                 <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📍 {item.location}</p>
               )}
-              {expanded && (
-                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {item.location           && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📍 {item.location}</p>}
-                  {item.notes              && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>📝 {item.notes}</p>}
-                  {item.confirmation_number && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔖 {item.confirmation_number}</p>}
-                  {item.type === 'flight' && item.flight_number && (
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      <PlaneSticker size={40} /> {item.airline} {item.flight_number} · {item.departure_airport} → {item.arrival_airport}
-                    </p>
-                  )}
-                </div>
+              {item.notes && (
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>📝 {item.notes}</p>
+              )}
+              {item.type === 'flight' && item.flight_number && (
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                  <PlaneSticker size={40} /> {item.airline} {item.flight_number} · {item.departure_airport} → {item.arrival_airport}
+                </p>
               )}
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--brown-dark)' }}>
                 {Number(item.cost) === 0 ? 'Free' : `${item.currency ?? '$'}${item.cost}`}
               </p>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>tap to edit</p>
             </div>
           </div>
         </div>

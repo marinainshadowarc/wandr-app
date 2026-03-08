@@ -62,5 +62,44 @@ export function useItinerary(tripId) {
     return formatted;
   };
 
-  return { days, loading, error, addItem };
+  const updateItem = async (id, itemData) => {
+    const { data: item, error: err } = await supabase
+      .from('itinerary_items')
+      .update(itemData)
+      .eq('id', id)
+      .select()
+      .single();
+    if (err) throw err;
+
+    const formatted = { ...item, time: fmtTime(item.time) };
+
+    setDays(prev => {
+      // Remove from whichever day it was in
+      const without = prev
+        .map(g => ({ ...g, items: g.items.filter(i => i.id !== id) }))
+        .filter(g => g.items.length > 0);
+      // Insert into correct day (day may have changed)
+      const existing = without.find(g => g.day === item.day_number);
+      if (existing) {
+        const newItems = [...existing.items, formatted]
+          .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        return without.map(g => g.day === item.day_number ? { ...g, items: newItems } : g);
+      }
+      return [...without, { day: item.day_number, items: [formatted] }]
+        .sort((a, b) => a.day - b.day);
+    });
+
+    return formatted;
+  };
+
+  const deleteItem = async (id) => {
+    const { error: err } = await supabase.from('itinerary_items').delete().eq('id', id);
+    if (err) throw err;
+    setDays(prev => prev
+      .map(g => ({ ...g, items: g.items.filter(i => i.id !== id) }))
+      .filter(g => g.items.length > 0)
+    );
+  };
+
+  return { days, loading, error, addItem, updateItem, deleteItem };
 }
