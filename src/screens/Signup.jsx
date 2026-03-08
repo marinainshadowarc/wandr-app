@@ -80,7 +80,7 @@ export default function Signup({ onSwitch }) {
     }}>
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ marginBottom: 8 }}><EarthSticker size={56} /></div>
+        <div style={{ marginBottom: 8 }}><EarthSticker size={64} /></div>
         <h1 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 36,

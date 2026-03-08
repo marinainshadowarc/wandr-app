@@ -47,7 +47,7 @@ export default function Home({ onTripSelect, onSignOut }) {
             </p>
             <h1 style={{ fontSize: 26, lineHeight: 1.25, color: 'var(--text-primary)' }}>
               Welcome, {firstName} —<br />
-              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> <EarthSticker size={28} />
+              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> <EarthSticker size={64} />
             </h1>
           </div>
           <button
@@ -126,7 +126,7 @@ export default function Home({ onTripSelect, onSignOut }) {
             <h2 className="section-title" style={{ marginBottom: 14 }}>At a glance</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <StatCard label="Trips planned" value={trips.length} icon={<PlaneSticker size={40} />} />
-              <StatCard label="Countries" value={new Set(trips.map(t => t.destination).filter(Boolean)).size} icon={<EarthSticker size={28} />} />
+              <StatCard label="Countries" value={new Set(trips.map(t => t.destination).filter(Boolean)).size} icon={<EarthSticker size={64} />} />
             </div>
           </div>
         )}

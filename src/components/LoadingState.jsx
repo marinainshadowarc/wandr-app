@@ -10,7 +10,7 @@ export default function LoadingState({ message = 'Loading…' }) {
       padding: '80px 24px',
       gap: 12,
     }}>
-      <EarthSticker size={44} />
+      <EarthSticker size={64} />
       <p style={{
         fontFamily: "'Playfair Display', serif",
         fontSize: 16,

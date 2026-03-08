@@ -26,7 +26,7 @@ function AppShell() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexDirection: 'column', gap: 12,
       }}>
-        <EarthSticker size={52} />
+        <EarthSticker size={64} />
         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: 'var(--text-muted)' }}>
           Loading…
         </p>
