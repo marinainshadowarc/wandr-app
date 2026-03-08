@@ -2,7 +2,7 @@ import { useState } from 'react';
 import PlaneSticker from './PlaneSticker';
 
 const TYPES = ['activity', 'food', 'hotel', 'flight', 'transport'];
-const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
+const TYPE_ICONS = { flight: <PlaneSticker size={64} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
 const CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'JPY', 'SGD', 'NZD'];
 const SHOW_CONFIRMATION = ['flight', 'hotel'];
 
@@ -248,7 +248,7 @@ export default function NewItineraryItemModal({ tripId, defaultDay, onSave, onCl
                 fontSize: 12, fontWeight: 600, color: 'var(--brown)',
                 letterSpacing: 0.5, marginBottom: 14, textTransform: 'uppercase',
               }}>
-                <PlaneSticker size={40} /> Flight details
+                <PlaneSticker size={64} /> Flight details
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <Field label="Airline" slim>

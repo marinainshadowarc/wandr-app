@@ -4,7 +4,7 @@ import LoadingState from '../components/LoadingState';
 import NewItineraryItemModal from '../components/NewItineraryItemModal';
 import PlaneSticker from '../components/PlaneSticker';
 
-const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
+const TYPE_ICONS = { flight: <PlaneSticker size={64} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
 
 export default function Itinerary({ tripId, tripName, tripDates }) {
   const { days, loading, error, addItem } = useItinerary(tripId);
@@ -183,7 +183,7 @@ function TimelineItem({ item, isLast }) {
                   {item.confirmation_number && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔖 {item.confirmation_number}</p>}
                   {item.type === 'flight' && item.flight_number && (
                     <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      <PlaneSticker size={40} /> {item.airline} {item.flight_number} · {item.departure_airport} → {item.arrival_airport}
+                      <PlaneSticker size={64} /> {item.airline} {item.flight_number} · {item.departure_airport} → {item.arrival_airport}
                     </p>
                   )}
                 </div>
