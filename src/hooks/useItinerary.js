@@ -10,7 +10,7 @@ export function useItinerary(tripId) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!tripId) return;
+    if (!tripId) { setLoading(false); return; }
     setLoading(true);
     supabase
       .from('itinerary_items')

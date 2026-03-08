@@ -24,7 +24,7 @@ export function useBudget(tripId) {
   const [error,    setError]    = useState(null);
 
   useEffect(() => {
-    if (!tripId) return;
+    if (!tripId) { setLoading(false); return; }
     setLoading(true);
 
     Promise.all([
@@ -47,6 +47,9 @@ export function useBudget(tripId) {
       setTripData(tripRes.data);
       setItems(itemsRes.data ?? []);
       setMembers(memberData.map(m => ({ ...m, profile: profileMap[m.user_id] ?? null })));
+      setLoading(false);
+    }).catch(err => {
+      setError(err.message ?? 'Failed to load budget.');
       setLoading(false);
     });
   }, [tripId]);
