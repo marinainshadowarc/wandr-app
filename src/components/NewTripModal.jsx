@@ -185,7 +185,7 @@ export default function NewTripModal({ onSave, onClose }) {
               letterSpacing: 0.3, transition: 'background 0.2s',
             }}
           >
-            {saving ? 'Creating…' : <span>Create trip <PlaneSticker size={64} /></span>}
+            {saving ? 'Creating…' : <span>Create trip <PlaneSticker size={40} /></span>}
           </button>
         </div>
       </div>

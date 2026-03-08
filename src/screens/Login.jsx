@@ -29,7 +29,7 @@ export default function Login({ onSwitch }) {
     }}>
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ marginBottom: 8 }}><EarthSticker size={64} /></div>
+        <div style={{ marginBottom: 8 }}><EarthSticker size={40} /></div>
         <h1 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 36,
