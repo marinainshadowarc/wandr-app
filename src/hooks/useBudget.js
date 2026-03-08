@@ -1,37 +1,41 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-const CATEGORY_COLORS = {
-  Flights:       '#c9a96e',
-  Accommodation: '#a0856a',
-  Food:          '#7a9e9f',
-  Activities:    '#b07d62',
-  Transport:     '#8b9e8b',
-  Shopping:      '#c4a882',
-  Other:         '#b0a090',
+const TYPE_LABELS = {
+  flight:    'Flights',
+  hotel:     'Accommodation',
+  food:      'Food',
+  activity:  'Activities',
+  transport: 'Transport',
+};
+const TYPE_COLORS = {
+  flight:    '#c9a96e',
+  hotel:     '#a0856a',
+  food:      '#7a9e9f',
+  activity:  '#b07d62',
+  transport: '#8b9e8b',
 };
 
-const colorForCategory = (name, idx) =>
-  CATEGORY_COLORS[name] ?? ['#c9a96e','#a0856a','#7a9e9f','#b07d62','#8b9e8b','#c4a882'][idx % 6];
-
 export function useBudget(tripId) {
-  const [rows,    setRows]    = useState([]);
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [tripData, setTripData] = useState(null);
+  const [items,    setItems]    = useState([]);
+  const [members,  setMembers]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
 
   useEffect(() => {
     if (!tripId) return;
     setLoading(true);
 
     Promise.all([
-      supabase.from('budget').select('*').eq('trip_id', tripId).order('created_at', { ascending: false }),
+      supabase.from('trips').select('id, total_budget').eq('id', tripId).single(),
+      supabase.from('itinerary_items').select('*').eq('trip_id', tripId),
       supabase.from('trip_members').select('*').eq('trip_id', tripId),
-    ]).then(async ([budgetRes, memberRes]) => {
-      if (budgetRes.error) { setError(budgetRes.error.message); setLoading(false); return; }
+    ]).then(async ([tripRes, itemsRes, membersRes]) => {
+      if (tripRes.error) { setError(tripRes.error.message); setLoading(false); return; }
 
       // Resolve member profiles
-      const memberData = memberRes.data ?? [];
+      const memberData = membersRes.data ?? [];
       const userIds = memberData.map(m => m.user_id).filter(Boolean);
       let profileMap = {};
       if (userIds.length > 0) {
@@ -39,71 +43,57 @@ export function useBudget(tripId) {
           .from('profiles').select('id, name, email').in('id', userIds);
         (profileData ?? []).forEach(p => { profileMap[p.id] = p; });
       }
-      const mergedMembers = memberData.map(m => ({
-        ...m,
-        profile: profileMap[m.user_id] ?? null,
-      }));
 
-      setRows(budgetRes.data ?? []);
-      setMembers(mergedMembers);
+      setTripData(tripRes.data);
+      setItems(itemsRes.data ?? []);
+      setMembers(memberData.map(m => ({ ...m, profile: profileMap[m.user_id] ?? null })));
       setLoading(false);
     });
   }, [tripId]);
 
-  const addExpense = async ({ description, amount, currency, category, paid_by }) => {
-    const { data: row, error: err } = await supabase
-      .from('budget')
-      .insert({
-        trip_id:      tripId,
-        description:  description.trim(),
-        spent_amount: Number(amount),
-        total_amount: 0,
-        currency,
-        category,
-        paid_by:      paid_by || null,
-      })
-      .select()
+  const updateTotalBudget = async (amount) => {
+    const { data, error: err } = await supabase
+      .from('trips')
+      .update({ total_budget: Number(amount) })
+      .eq('id', tripId)
+      .select('total_budget')
       .single();
     if (err) throw err;
-    setRows(prev => [row, ...prev]);
-    return row;
+    setTripData(prev => ({ ...prev, total_budget: data.total_budget }));
   };
 
-  const deleteExpense = async (id) => {
-    const { error: err } = await supabase.from('budget').delete().eq('id', id);
-    if (err) throw err;
-    setRows(prev => prev.filter(r => r.id !== id));
+  // ── Derived values ────────────────────────────────────────
+  const totalBudget = Number(tripData?.total_budget ?? 0);
+  const totalSpent  = items.reduce((s, i) => s + Number(i.cost ?? 0), 0);
+  const remaining   = totalBudget - totalSpent;
+  const pct         = totalBudget > 0 ? Math.min(Math.round((totalSpent / totalBudget) * 100), 999) : 0;
+
+  // Category breakdown grouped by type
+  const catMap = {};
+  items.forEach(item => {
+    const key = item.type ?? 'other';
+    if (!catMap[key]) catMap[key] = { type: key, label: TYPE_LABELS[key] ?? key, total: 0 };
+    catMap[key].total += Number(item.cost ?? 0);
+  });
+  const categories = Object.values(catMap)
+    .filter(c => c.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .map(c => ({
+      ...c,
+      color:    TYPE_COLORS[c.type] ?? '#c4a882',
+      sharePct: totalSpent > 0 ? Math.round((c.total / totalSpent) * 100) : 0,
+    }));
+
+  // Per person
+  const memberCount = members.length;
+  const perPerson   = memberCount > 0 ? totalSpent / memberCount : 0;
+
+  return {
+    totalBudget, totalSpent, remaining, pct,
+    categories, members, memberCount, perPerson,
+    loading, error,
+    hasItems:  items.length > 0,
+    hasBudget: totalBudget > 0,
+    updateTotalBudget,
   };
-
-  // Aggregates (derived from rows — no useState needed)
-  const total = rows.reduce((s, r) => s + Number(r.total_amount), 0);
-  const spent = rows.reduce((s, r) => s + Number(r.spent_amount), 0);
-
-  const categoryMap = {};
-  rows.forEach((row, i) => {
-    if (!categoryMap[row.category]) {
-      categoryMap[row.category] = { category: row.category, totalBudget: 0, totalSpent: 0, idx: i };
-    }
-    categoryMap[row.category].totalBudget += Number(row.total_amount);
-    categoryMap[row.category].totalSpent  += Number(row.spent_amount);
-  });
-  const categories = Object.values(categoryMap).map(c => ({
-    ...c,
-    color: colorForCategory(c.category, c.idx),
-  }));
-
-  // Per-member spending
-  const paidByMap = {};
-  rows.forEach(row => {
-    if (!row.paid_by) return;
-    paidByMap[row.paid_by] = (paidByMap[row.paid_by] ?? 0) + Number(row.spent_amount);
-  });
-  const paidByBreakdown = Object.entries(paidByMap).map(([profileId, amount]) => {
-    const member = members.find(m => m.user_id === profileId);
-    return { profileId, name: member?.profile?.name ?? 'Unknown', amount };
-  }).sort((a, b) => b.amount - a.amount);
-
-  const budget = rows.length > 0 ? { total, spent, categories, paidByBreakdown, rows } : null;
-
-  return { budget, loading, error, members, addExpense, deleteExpense };
 }
