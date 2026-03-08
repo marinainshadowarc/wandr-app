@@ -7,6 +7,8 @@ import PlaneSticker from '../components/PlaneSticker';
 import EarthSticker from '../components/EarthSticker';
 import PinSticker from '../components/PinSticker';
 import CalendarSticker from '../components/CalendarSticker';
+import SunSticker from '../components/SunSticker';
+import RainbowSticker from '../components/RainbowSticker';
 
 function greeting() {
   const h = new Date().getHours();
@@ -41,15 +43,27 @@ export default function Home({ onTripSelect, onSignOut }) {
       <div style={{
         background: 'linear-gradient(160deg, #ffd4bc 0%, #fff4ee 60%)',
         padding: '52px 24px 28px',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
+        {/* Decorative stickers */}
+        <div style={{ position: 'absolute', bottom: 16, right: 20, opacity: 0.85, pointerEvents: 'none' }}>
+          <RainbowSticker size={120} />
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <p style={{ fontSize: 13, color: 'var(--brown)', fontWeight: 500, marginBottom: 6, letterSpacing: 0.5 }}>
-              {greeting()}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <p style={{ fontSize: 16, color: 'var(--brown)', fontWeight: 400, letterSpacing: 0.5 }}>
+                {greeting()}
+              </p>
+              <div style={{ position: 'absolute', top: 28, right: 8, pointerEvents: 'none' }}>
+                <SunSticker size={200} />
+              </div>
+            </div>
             <h1 style={{ fontSize: 26, lineHeight: 1.25, color: 'var(--text-primary)' }}>
               Welcome, {firstName} —<br />
-              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> <EarthSticker size={64} />
+              <span style={{ fontStyle: 'italic', color: 'var(--brown)' }}>a brave little explorer</span> <span style={{ marginLeft: -24, display: 'inline-block' }}><EarthSticker size={100} /></span>
             </h1>
           </div>
           <button
@@ -260,8 +274,8 @@ function TripCard({ trip, onSelect, onDelete }) {
         </div>
 
         <div style={{ display: 'flex', gap: 20 }}>
-          {trip.destination && <Stat icon={<PinSticker size={48} />} label={trip.destination} />}
-          {totalDays && <Stat icon={<CalendarSticker size={48} />} label={`${totalDays} days`} />}
+          {trip.destination && <Stat icon={<PinSticker size={40} />} label={trip.destination} />}
+          {totalDays && <Stat icon={<CalendarSticker size={40} />} label={`${totalDays} days`} />}
         </div>
       </div>
     </div>
@@ -270,8 +284,8 @@ function TripCard({ trip, onSelect, onDelete }) {
 
 function Stat({ icon, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-      <span style={{ fontSize: 13 }}>{icon}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+      <span style={{ display: 'flex', alignItems: 'center', marginRight: -8 }}>{icon}</span>
       <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{label}</span>
     </div>
   );
