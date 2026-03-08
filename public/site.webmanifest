@@ -1,0 +1,21 @@
+{
+  "name": "Wandr",
+  "short_name": "Wandr",
+  "description": "Your personal trip planning companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf6f0",
+  "theme_color": "#2c1f0e",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
