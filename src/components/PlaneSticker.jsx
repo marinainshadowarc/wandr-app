@@ -1,7 +1,7 @@
 export default function PlaneSticker({ size = 40 }) {
   return (
     <img
-      src="/airplane-sticker.png"
+      src="/plane.png"
       alt="✈"
       style={{
         width: size,
