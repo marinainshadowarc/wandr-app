@@ -1,5 +1,5 @@
 // v1.1.0
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import EarthSticker from './components/EarthSticker';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import BottomNav from './components/BottomNav';
@@ -10,12 +10,35 @@ import Packing from './screens/Packing';
 import Pals from './screens/Pals';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
+import { acceptInvitation } from './hooks/usePals';
 
 function AppShell() {
   const { session, signOut } = useAuth();
-  const [screen, setScreen] = useState('home');
-  const [authView, setAuthView] = useState('login');
+  const [screen,     setScreen]     = useState('home');
+  const [authView,   setAuthView]   = useState('login');
   const [activeTrip, setActiveTrip] = useState(null);
+
+  // Check for invite token in URL on first load
+  const [inviteToken] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('invite');
+  });
+
+  // Accept invitation once session is available
+  useEffect(() => {
+    if (!inviteToken || !session?.user?.id) return;
+
+    acceptInvitation(inviteToken, session.user.id)
+      .then(inv => {
+        if (inv) {
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+          // Let user know — they can navigate to the trip
+          alert(`You've joined the trip! Find it on the Home screen.`);
+        }
+      })
+      .catch(err => console.error('Failed to accept invitation:', err));
+  }, [inviteToken, session?.user?.id]);
 
   // Loading session
   if (session === undefined) {
@@ -34,9 +57,12 @@ function AppShell() {
     );
   }
 
-  // Not logged in
+  // Not logged in — show login/signup
+  // If there's an invite token, default to signup so new users can create an account
   if (!session) {
-    return authView === 'login'
+    const defaultView = inviteToken ? 'signup' : 'login';
+    const view = authView || defaultView;
+    return view === 'login'
       ? <Login onSwitch={() => setAuthView('signup')} />
       : <Signup onSwitch={() => setAuthView('login')} />;
   }
@@ -54,8 +80,8 @@ function AppShell() {
   };
 
   const tripProps = activeTrip ? {
-    tripId: activeTrip.id,
-    tripName: activeTrip.name?.toUpperCase(),
+    tripId:    activeTrip.id,
+    tripName:  activeTrip.name?.toUpperCase(),
     tripDates: formatTripDates(activeTrip),
   } : {};
 
