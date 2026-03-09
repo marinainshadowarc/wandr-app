@@ -57,7 +57,7 @@ export default function Home({ onTripSelect, onSignOut }) {
               <p style={{ fontSize: 16, color: 'var(--brown)', fontWeight: 400, letterSpacing: 0.5 }}>
                 {greeting()}
               </p>
-              <div style={{ position: 'absolute', top: 28, right: -10, pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', top: 28, right: -30, pointerEvents: 'none' }}>
                 <SunSticker size={200} />
               </div>
             </div>
