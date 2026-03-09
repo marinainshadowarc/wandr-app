@@ -26,9 +26,9 @@ function AppShell() {
 
   // Accept invitation once session is available
   useEffect(() => {
-    if (!inviteToken || !session?.user?.id) return;
+    if (!inviteToken || !session) return;
 
-    acceptInvitation(inviteToken, session.user.id)
+    acceptInvitation(inviteToken)
       .then(inv => {
         if (inv) {
           // Clean up URL
@@ -38,7 +38,7 @@ function AppShell() {
         }
       })
       .catch(err => console.error('Failed to accept invitation:', err));
-  }, [inviteToken, session?.user?.id]);
+  }, [inviteToken, session]);
 
   // Loading session
   if (session === undefined) {

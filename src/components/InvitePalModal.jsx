@@ -6,11 +6,12 @@ const ROLES = [
 ];
 
 export default function InvitePalModal({ onInvite, onClose }) {
-  const [email,   setEmail]   = useState('');
-  const [role,    setRole]    = useState('Editor');
-  const [sending, setSending] = useState(false);
-  const [error,   setError]   = useState('');
-  const [success, setSuccess] = useState(false);
+  const [email,      setEmail]      = useState('');
+  const [role,       setRole]       = useState('Editor');
+  const [sending,    setSending]    = useState(false);
+  const [error,      setError]      = useState('');
+  const [result,     setResult]     = useState(null);   // { existing, inviteLink, token }
+  const [copied,     setCopied]     = useState(false);
 
   const handleSend = async () => {
     if (!email.trim()) { setError('Please enter an email address.'); return; }
@@ -19,19 +20,102 @@ export default function InvitePalModal({ onInvite, onClose }) {
     setSending(true);
     setError('');
     try {
-      const result = await onInvite(email.trim().toLowerCase(), role);
-      setSuccess(result?.existing ?? false);
-      if (result?.existing) {
-        // Already a Wandr user — added directly, close after brief delay
+      const res = await onInvite(email.trim().toLowerCase(), role);
+      setResult(res);
+      if (res?.existing) {
         setTimeout(onClose, 2000);
-      } else {
-        setSuccess(true);
       }
     } catch (e) {
       setError(e.message ?? 'Failed to send invite.');
+    } finally {
       setSending(false);
     }
   };
+
+  const handleCopy = async () => {
+    if (!result?.inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(result.inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setError('Could not copy — try selecting the link manually.');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!result?.inviteLink || !navigator.share) return;
+    try {
+      await navigator.share({
+        title: 'Join my trip on Wandr!',
+        text: 'You\'ve been invited to a trip on Wandr. Tap the link to join:',
+        url: result.inviteLink,
+      });
+    } catch {
+      /* user cancelled share sheet — no-op */
+    }
+  };
+
+  /* ── Success: existing user added directly ── */
+  const renderExistingSuccess = () => (
+    <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+      <p style={{ fontSize: 40, marginBottom: 12 }}>&#x1F389;</p>
+      <p style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
+        Added to trip!
+      </p>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        <strong>{email}</strong> is already on Wandr and has been added to this trip.
+      </p>
+    </div>
+  );
+
+  /* ── Success: new user — email sent ── */
+  const renderInviteLink = () => (
+    <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+      <p style={{ fontSize: 40, marginBottom: 12 }}>&#x1F389;</p>
+      <p style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
+        Invite sent!
+      </p>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 20 }}>
+        We emailed <strong>{email}</strong> an invite to join this trip.
+      </p>
+
+      {/* Backup: share link manually */}
+      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
+        Or share the link directly
+      </p>
+      <div style={{
+        background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 10,
+        padding: '10px 14px', fontSize: 13, color: 'var(--text-secondary)',
+        wordBreak: 'break-all', textAlign: 'left', marginBottom: 16, lineHeight: 1.5,
+      }}>
+        {result.inviteLink}
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={handleCopy} style={{ ...actionBtnStyle, flex: 1 }}>
+          {copied ? 'Copied!' : 'Copy Link'}
+        </button>
+        {typeof navigator !== 'undefined' && navigator.share && (
+          <button onClick={handleShare} style={{ ...actionBtnStyle, flex: 1, background: 'var(--cream-dark)', color: 'var(--text-primary)' }}>
+            Share
+          </button>
+        )}
+      </div>
+
+      <button
+        onClick={onClose}
+        style={{
+          marginTop: 12, width: '100%', padding: '14px',
+          background: 'none', color: 'var(--text-muted)',
+          border: 'none', fontSize: 14, cursor: 'pointer',
+        }}
+      >
+        Done
+      </button>
+    </div>
+  );
 
   return (
     <div
@@ -71,34 +155,12 @@ export default function InvitePalModal({ onInvite, onClose }) {
               width: 32, height: 32, fontSize: 18, color: 'var(--text-secondary)',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
-          >×</button>
+          >&times;</button>
         </div>
 
         <div style={{ padding: '24px 24px 0' }}>
-          {success ? (
-            /* Success state */
-            <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
-              <p style={{ fontSize: 40, marginBottom: 12 }}>🎉</p>
-              <p style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
-                Invite sent!
-              </p>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                We emailed <strong>{email}</strong> an invite link to join this trip.
-              </p>
-              <button
-                onClick={onClose}
-                style={{
-                  marginTop: 24, width: '100%', padding: '14px',
-                  background: 'var(--text-primary)', color: 'var(--cream)',
-                  border: 'none', borderRadius: 'var(--radius)',
-                  fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Done
-              </button>
-            </div>
-          ) : (
+          {result?.existing ? renderExistingSuccess() :
+           result?.inviteLink ? renderInviteLink() : (
             <>
               {/* Email */}
               <div style={{ marginBottom: 20 }}>
@@ -164,7 +226,7 @@ export default function InvitePalModal({ onInvite, onClose }) {
                   transition: 'background 0.2s',
                 }}
               >
-                {sending ? 'Sending invite…' : 'Send invite'}
+                {sending ? 'Sending invite...' : 'Send invite'}
               </button>
             </>
           )}
@@ -188,4 +250,12 @@ const inputStyle = {
   fontSize: 15, color: 'var(--text-primary)',
   background: 'var(--cream)', outline: 'none',
   fontFamily: 'Inter, sans-serif',
+};
+
+const actionBtnStyle = {
+  padding: '14px',
+  background: 'var(--text-primary)', color: 'var(--cream)',
+  border: 'none', borderRadius: 'var(--radius)',
+  fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 600,
+  cursor: 'pointer',
 };

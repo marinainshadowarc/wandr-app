@@ -44,50 +44,152 @@ export function usePals(tripId) {
     });
   }, [tripId]);
 
-  const invitePal = async (email, role) => {
+  /* ── helpers ── */
+
+  async function resolveProfile() {
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data: profile, error: pErr } = await supabase
+      .from('profiles')
+      .select('id, name')
+      .eq('auth_id', user.id)
+      .single();
+    if (pErr || !profile) throw new Error('Profile not found');
+    return profile;
+  }
 
-    const { data, error: fnErr } = await supabase.functions.invoke('invite-pal', {
-      body: {
-        trip_id:    tripId,
-        email,
-        role,
-        invited_by: user?.id,
-      },
-    });
+  /* ── invitePal ── */
 
-    if (fnErr) throw fnErr;
-    if (data?.error) throw new Error(data.error);
+  const invitePal = async (email, role, tripName) => {
+    const { id: profileId, name: inviterName } = await resolveProfile();
 
-    // If the user already existed, they're now a member — refresh
-    if (data?.existing) {
+    // Check if invited email already has a Wandr profile
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingProfile) {
+      // Existing user — add directly to trip
+      const { error: memberErr } = await supabase
+        .from('trip_members')
+        .upsert(
+          { trip_id: tripId, user_id: existingProfile.id, role },
+          { onConflict: 'trip_id,user_id' },
+        );
+      if (memberErr) throw memberErr;
+
+      // Refresh local members list
       const { data: newMember } = await supabase
         .from('trip_members')
         .select('*')
         .eq('trip_id', tripId)
-        .eq('user_id', (await supabase.from('profiles').select('id').eq('email', email).single()).data?.id)
+        .eq('user_id', existingProfile.id)
         .maybeSingle();
 
       if (newMember) {
         setMembers(prev => {
-          const already = prev.find(m => m.user_id === newMember.user_id);
-          if (already) return prev;
+          if (prev.find(m => m.user_id === newMember.user_id)) return prev;
           return [...prev, { ...newMember, color: MEMBER_COLORS[prev.length % MEMBER_COLORS.length] }];
         });
       }
-    } else {
-      // Pending invite created — add to pendingInvites list
-      setPendingInvites(prev => [...prev, { invited_email: email, role, status: 'pending' }]);
+
+      return { existing: true };
     }
 
-    return data;
+    // New user — check for existing pending invite (avoid duplicates)
+    const { data: existingInvite } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('trip_id', tripId)
+      .eq('invited_email', email)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    if (existingInvite) {
+      const inviteLink = `${window.location.origin}?invite=${existingInvite.token}`;
+      // Fire-and-forget: send email for the existing invite too
+      sendInviteEmail(email, inviterName, tripName, inviteLink);
+      return { existing: false, inviteLink, token: existingInvite.token };
+    }
+
+    // Create new invitation
+    const token = crypto.randomUUID();
+    const { error: insertErr } = await supabase
+      .from('invitations')
+      .insert({
+        trip_id: tripId,
+        invited_email: email,
+        invited_by: profileId,
+        role,
+        token,
+        status: 'pending',
+      });
+    if (insertErr) throw insertErr;
+
+    const inviteLink = `${window.location.origin}?invite=${token}`;
+
+    setPendingInvites(prev => [...prev, { invited_email: email, role, status: 'pending', token }]);
+
+    // Fire-and-forget: send invite email via Edge Function
+    sendInviteEmail(email, inviterName, tripName, inviteLink);
+
+    return { existing: false, inviteLink, token };
   };
 
-  return { members, pendingInvites, loading, error, invitePal };
+  const cancelInvite = async (inviteId) => {
+    const { error: delErr } = await supabase
+      .from('invitations')
+      .delete()
+      .eq('id', inviteId);
+    if (delErr) throw delErr;
+    setPendingInvites(prev => prev.filter(i => i.id !== inviteId));
+  };
+
+  return { members, pendingInvites, loading, error, invitePal, cancelInvite };
+}
+
+/* ── Send invite email via Edge Function (fire-and-forget) ── */
+
+const INVITE_EMAIL_SECRET = 'wandr-invite-v1-s3cret';
+
+async function sendInviteEmail(to, inviterName, tripName, inviteLink) {
+  try {
+    const res = await fetch(
+      'https://vtnugabaxipgourmmkne.supabase.co/functions/v1/send-invite-email',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${INVITE_EMAIL_SECRET}`,
+        },
+        body: JSON.stringify({ to, inviterName, tripName, inviteLink }),
+      },
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn('Invite email failed:', res.status, err);
+    }
+  } catch (err) {
+    // Email is best-effort — invite link still works without it
+    console.warn('Invite email failed to send:', err.message);
+  }
 }
 
 // Standalone function — called from App.jsx on invite link landing
-export async function acceptInvitation(token, userId) {
+export async function acceptInvitation(token) {
+  // Resolve the current auth user's profile ID
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('auth_id', user.id)
+    .single();
+  if (profileErr || !profile) throw new Error('Profile not found');
+
   const { data: inv, error: lookupErr } = await supabase
     .from('invitations')
     .select('*')
@@ -97,10 +199,10 @@ export async function acceptInvitation(token, userId) {
 
   if (lookupErr || !inv) return null;
 
-  // Add to trip_members
+  // Add to trip_members using profile ID (not auth UID)
   const { error: memberErr } = await supabase
     .from('trip_members')
-    .upsert({ trip_id: inv.trip_id, user_id: userId, role: inv.role }, { onConflict: 'trip_id,user_id' });
+    .upsert({ trip_id: inv.trip_id, user_id: profile.id, role: inv.role }, { onConflict: 'trip_id,user_id' });
 
   if (memberErr) throw memberErr;
 

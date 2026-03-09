@@ -10,7 +10,7 @@ const ROLE_COLORS = {
 };
 
 export default function Pals({ tripId, tripName, tripDates }) {
-  const { members, pendingInvites, loading, error, invitePal } = usePals(tripId);
+  const { members, pendingInvites, loading, error, invitePal, cancelInvite } = usePals(tripId);
   const [showInvite, setShowInvite] = useState(false);
 
   if (!tripId) return (
@@ -111,6 +111,20 @@ export default function Pals({ tripId, tripName, tripDates }) {
                     }}>
                       {inv.role}
                     </span>
+                    {inv.id && (
+                      <button
+                        onClick={() => cancelInvite(inv.id)}
+                        style={{
+                          background: 'none', border: 'none',
+                          color: 'var(--text-muted)', fontSize: 18,
+                          cursor: 'pointer', padding: '4px 8px',
+                          lineHeight: 1,
+                        }}
+                        title="Cancel invite"
+                      >
+                        &times;
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -121,7 +135,7 @@ export default function Pals({ tripId, tripName, tripDates }) {
 
       {showInvite && (
         <InvitePalModal
-          onInvite={invitePal}
+          onInvite={(email, role) => invitePal(email, role, tripName)}
           onClose={() => setShowInvite(false)}
         />
       )}
