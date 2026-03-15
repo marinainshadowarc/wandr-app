@@ -18,6 +18,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
+    // Resolve invited_by: could be an auth uid, so look up profile id
+    let invitedByProfileId = invited_by;
+    if (invited_by) {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .or(`id.eq.${invited_by},auth_id.eq.${invited_by}`)
+        .maybeSingle();
+      if (profile) invitedByProfileId = profile.id;
+    }
+
     // Check if user already exists in profiles
     const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
@@ -42,7 +53,7 @@ Deno.serve(async (req) => {
     // New user — create invitation record then send Supabase invite email
     const { data: invitation, error: inviteErr } = await supabaseAdmin
       .from('invitations')
-      .insert({ trip_id, invited_email: email, role, invited_by })
+      .insert({ trip_id, invited_email: email, role, invited_by: invitedByProfileId })
       .select()
       .single();
 
@@ -51,20 +62,32 @@ Deno.serve(async (req) => {
     const siteUrl = Deno.env.get('SITE_URL') ?? 'https://wandr-app.vercel.app';
     const redirectTo = `${siteUrl}?invite=${invitation.token}`;
 
-    const { error: authErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: {
-        invitation_token: String(invitation.token),
-        trip_id,
-        role,
-        trip_name,
-      },
-    });
-
-    if (authErr) throw authErr;
+    // Try to send invite email via Supabase Auth
+    // If it fails (e.g. email provider not configured), still return success
+    // since the invitation record was created and can be shared via link
+    let emailSent = false;
+    try {
+      const { error: authErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: {
+          invitation_token: String(invitation.token),
+          trip_id,
+          role,
+          trip_name,
+        },
+      });
+      emailSent = !authErr;
+    } catch (_) {
+      // Email sending failed — invitation link still works
+    }
 
     return new Response(
-      JSON.stringify({ success: true, token: invitation.token }),
+      JSON.stringify({
+        success: true,
+        token: invitation.token,
+        emailSent,
+        inviteLink: redirectTo,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {

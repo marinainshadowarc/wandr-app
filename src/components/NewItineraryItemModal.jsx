@@ -2,7 +2,8 @@ import { useState } from 'react';
 import PlaneSticker from './PlaneSticker';
 
 const TYPES = ['activity', 'food', 'hotel', 'flight', 'transport'];
-const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
+const FoodIcon = ({ size = 18 }) => <img src="/food.png" alt="food" style={{ width: size, height: size, verticalAlign: 'middle' }} />;
+const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: <FoodIcon />, activity: '🎯', transport: '🚆' };
 const CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'JPY', 'SGD', 'NZD'];
 const SHOW_CONFIRMATION = ['flight', 'hotel'];
 

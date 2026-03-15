@@ -1,20 +1,18 @@
 import { useState } from 'react';
 
-const CATEGORIES = ['Flights', 'Accommodation', 'Food', 'Activities', 'Transport', 'Shopping', 'Other'];
-const CURRENCIES  = ['AUD', 'USD', 'EUR', 'GBP', 'JPY', 'SGD', 'NZD'];
+const CATEGORIES = ['Essentials', 'Clothing', 'Toiletries', 'Electronics', 'Documents', 'Activities', 'Other'];
 
 const CAT_EMOJIS = {
-  Flights: '✈', Accommodation: '🏨', Food: <img src="/food.png" alt="food" style={{ width: 16, height: 16 }} />,
-  Activities: '🎯', Transport: '🚆', Shopping: '🛍️', Other: '💳',
+  Essentials: '🎒', Clothing: '👗', Toiletries: '🧴',
+  Electronics: '💻', Documents: '📄', Activities: '🏄', Other: '🧳',
 };
 
-export default function NewExpenseModal({ members, onSave, onClose }) {
+export default function NewPackingItemModal({ members, onSave, onClose }) {
   const [form, setForm] = useState({
-    description: '',
-    amount:      '',
-    currency:    'AUD',
-    category:    'Food',
-    paid_by:     members[0]?.user_id ?? '',
+    name:        '',
+    category:    'Essentials',
+    assigned_to: '',
+    notes:       '',
   });
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState('');
@@ -22,13 +20,17 @@ export default function NewExpenseModal({ members, onSave, onClose }) {
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   const handleSave = async () => {
-    if (!form.description.trim()) { setError('Description is required.');        return; }
-    if (!form.amount || Number(form.amount) <= 0) { setError('Enter a valid amount.'); return; }
+    if (!form.name.trim()) { setError('Item name is required.'); return; }
 
     setSaving(true);
     setError('');
     try {
-      await onSave(form);
+      await onSave({
+        name: form.name.trim(),
+        category: form.category,
+        assigned_to: form.assigned_to || null,
+        notes: form.notes.trim() || null,
+      });
     } catch (e) {
       setError(e.message ?? 'Something went wrong.');
       setSaving(false);
@@ -63,7 +65,7 @@ export default function NewExpenseModal({ members, onSave, onClose }) {
           padding: '16px 24px 20px', borderBottom: '1px solid var(--border)',
         }}>
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: 'var(--text-primary)' }}>
-            Add Expense
+            Add Item
           </h2>
           <button
             onClick={onClose}
@@ -77,36 +79,15 @@ export default function NewExpenseModal({ members, onSave, onClose }) {
 
         <div style={{ padding: '24px 24px 0' }}>
 
-          {/* Amount + Currency */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
-            <Field label="Amount">
-              <input
-                type="number" min={0} step="0.01" placeholder="0.00"
-                value={form.amount}
-                onChange={e => set('amount', e.target.value)}
-                style={{ ...inputStyle, fontSize: 20, fontWeight: 600 }}
-                autoFocus
-              />
-            </Field>
-            <Field label="Currency">
-              <select
-                value={form.currency}
-                onChange={e => set('currency', e.target.value)}
-                style={{ ...inputStyle, cursor: 'pointer' }}
-              >
-                {CURRENCIES.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
-          </div>
-
-          {/* Description */}
-          <Field label="Description">
+          {/* Item name */}
+          <Field label="Item name">
             <input
               type="text"
-              placeholder="e.g. Dinner at Nobu"
-              value={form.description}
-              onChange={e => set('description', e.target.value)}
+              placeholder="e.g. Sunscreen"
+              value={form.name}
+              onChange={e => set('name', e.target.value)}
               style={inputStyle}
+              autoFocus
             />
           </Field>
 
@@ -132,12 +113,12 @@ export default function NewExpenseModal({ members, onSave, onClose }) {
             </div>
           </div>
 
-          {/* Paid by */}
+          {/* Assigned to */}
           {members.length > 0 && (
-            <Field label="Paid by">
+            <Field label="Assigned to">
               <select
-                value={form.paid_by}
-                onChange={e => set('paid_by', e.target.value)}
+                value={form.assigned_to}
+                onChange={e => set('assigned_to', e.target.value)}
                 style={{ ...inputStyle, cursor: 'pointer' }}
               >
                 <option value="">— Unassigned —</option>
@@ -149,6 +130,17 @@ export default function NewExpenseModal({ members, onSave, onClose }) {
               </select>
             </Field>
           )}
+
+          {/* Notes */}
+          <Field label="Notes (optional)">
+            <input
+              type="text"
+              placeholder="e.g. SPF 50+"
+              value={form.notes}
+              onChange={e => set('notes', e.target.value)}
+              style={inputStyle}
+            />
+          </Field>
 
           {/* Error */}
           {error && (
@@ -175,7 +167,7 @@ export default function NewExpenseModal({ members, onSave, onClose }) {
               letterSpacing: 0.3, transition: 'background 0.2s',
             }}
           >
-            {saving ? 'Saving…' : 'Add expense'}
+            {saving ? 'Saving…' : 'Add item'}
           </button>
         </div>
       </div>

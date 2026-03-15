@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { logActivity } from '../lib/activityLogger';
 
 const TYPE_LABELS = {
   flight:    'Flights',
@@ -63,6 +64,7 @@ export function useBudget(tripId) {
       .single();
     if (err) throw err;
     setTripData(prev => ({ ...prev, total_budget: data.total_budget }));
+    logActivity(tripId, `updated_budget:$${amount}`, 'budget');
   };
 
   // ── Derived values ────────────────────────────────────────

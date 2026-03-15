@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { logActivity } from '../lib/activityLogger';
 
 const MEMBER_COLORS = ['#6366f1', '#ff6b4a', '#10b981', '#f59e0b', '#a855f7', '#06b6d4'];
 
@@ -95,6 +96,7 @@ export function usePals(tripId) {
         });
       }
 
+      logActivity(tripId, `added_member:${email}`, 'members');
       return { existing: true };
     }
 
@@ -135,6 +137,7 @@ export function usePals(tripId) {
     // Fire-and-forget: send invite email via Edge Function
     sendInviteEmail(email, inviterName, tripName, inviteLink);
 
+    logActivity(tripId, `invited_pal:${email}`, 'members');
     return { existing: false, inviteLink, token };
   };
 
@@ -209,5 +212,6 @@ export async function acceptInvitation(token) {
   // Mark invitation accepted
   await supabase.from('invitations').update({ status: 'accepted' }).eq('id', inv.id);
 
+  logActivity(inv.trip_id, 'joined_trip', 'members', profile.id);
   return inv;
 }

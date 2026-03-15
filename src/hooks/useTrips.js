@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { logActivity } from '../lib/activityLogger';
 
 export function useTrips() {
   const [trips, setTrips] = useState([]);
@@ -32,6 +33,7 @@ export function useTrips() {
     if (memberErr) throw memberErr;
 
     setTrips(prev => [trip, ...prev]);
+    logActivity(trip.id, `created_trip:${name}`, 'trip', profileId);
     return trip;
   };
 

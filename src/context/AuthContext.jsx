@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { clearProfileCache } from '../lib/activityLogger';
 
 const AuthContext = createContext({});
 
@@ -20,7 +21,10 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signOut = () => supabase.auth.signOut();
+  const signOut = () => {
+    clearProfileCache();
+    return supabase.auth.signOut();
+  };
 
   return (
     <AuthContext.Provider value={{ session, signOut }}>

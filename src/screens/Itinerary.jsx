@@ -6,7 +6,8 @@ import PlaneSticker from '../components/PlaneSticker';
 import PinSticker from '../components/PinSticker';
 import CalendarSticker from '../components/CalendarSticker';
 
-const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: '🍜', activity: '🎯', transport: '🚆' };
+const FoodIcon = ({ size = 18 }) => <img src="/food.png" alt="food" style={{ width: size, height: size, verticalAlign: 'middle' }} />;
+const TYPE_ICONS = { flight: <PlaneSticker size={40} />, hotel: '🏨', food: <FoodIcon />, activity: '🎯', transport: '🚆' };
 
 export default function Itinerary({ tripId, tripName, tripDates }) {
   const { days, loading, error, addItem, updateItem, deleteItem } = useItinerary(tripId);

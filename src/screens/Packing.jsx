@@ -1,20 +1,37 @@
+import { useState } from 'react';
 import { usePacking } from '../hooks/usePacking';
 import LoadingState from '../components/LoadingState';
+import NewPackingItemModal from '../components/NewPackingItemModal';
 
 const CATEGORY_EMOJIS = {
-  Documents: '📄',
-  Tech:      '🔌',
-  Clothing:  '👗',
-  Health:    '💊',
+  Essentials:  '🎒',
+  Clothing:    '👗',
+  Toiletries:  '🧴',
+  Electronics: '💻',
+  Documents:   '📄',
+  Activities:  '🏄',
+  Tech:        '🔌',
+  Health:      '💊',
+  Other:       '🧳',
 };
 
 export default function Packing({ tripId, tripName, tripDates }) {
-  const { categories, loading, error, toggleItem } = usePacking(tripId);
+  const { categories, members, loading, error, toggleItem, addItem, deleteItem } = usePacking(tripId);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const allItems = categories.flatMap(c => c.items);
   const packedCount = allItems.filter(i => i.is_packed).length;
   const totalCount = allItems.length;
   const pct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+
+  // Build a quick lookup for member names
+  const memberMap = {};
+  members.forEach(m => { memberMap[m.user_id] = m.profile?.name ?? m.profile?.email ?? 'Unknown'; });
+
+  const handleAddItem = async (form) => {
+    await addItem(form);
+    setShowAddModal(false);
+  };
 
   return (
     <div className="screen">
@@ -22,7 +39,18 @@ export default function Packing({ tripId, tripName, tripDates }) {
         <p style={{ fontSize: 12, color: 'var(--brown)', fontWeight: 500, letterSpacing: 0.8, marginBottom: 4 }}>
           {tripName ?? 'TRIP'}{tripDates ? ` · ${tripDates}` : ''}
         </p>
-        <h1 style={{ fontSize: 28, color: 'var(--text-primary)' }}>Packing</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 28, color: 'var(--text-primary)' }}>Packing</h1>
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'var(--text-primary)', color: 'var(--cream)',
+              border: 'none', fontSize: 20, fontWeight: 600,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >+</button>
+        </div>
       </div>
 
       {loading ? (
@@ -84,7 +112,9 @@ export default function Packing({ tripId, tripName, tripDates }) {
                     <PackingItem
                       key={item.id}
                       item={item}
+                      assignedName={item.assigned_to ? memberMap[item.assigned_to] : null}
                       onToggle={() => toggleItem(item.id, item.is_packed)}
+                      onDelete={() => deleteItem(item.id)}
                     />
                   ))}
                 </div>
@@ -93,39 +123,69 @@ export default function Packing({ tripId, tripName, tripDates }) {
           })}
         </div>
       )}
+
+      {showAddModal && (
+        <NewPackingItemModal
+          members={members}
+          onSave={handleAddItem}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
     </div>
   );
 }
 
-function PackingItem({ item, onToggle }) {
+function PackingItem({ item, assignedName, onToggle, onDelete }) {
   return (
     <div
-      onClick={onToggle}
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '10px 4px', borderBottom: '1px solid var(--border)',
-        cursor: 'pointer', transition: 'opacity 0.2s',
+        transition: 'opacity 0.2s',
         opacity: item.is_packed ? 0.5 : 1,
       }}
     >
-      <div className={`checkbox ${item.is_packed ? 'checked' : ''}`}>
-        {item.is_packed && (
-          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-            <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
+      <div
+        onClick={onToggle}
+        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}
+      >
+        <div className={`checkbox ${item.is_packed ? 'checked' : ''}`}>
+          {item.is_packed && (
+            <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+              <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={{
+            fontSize: 14, color: 'var(--text-primary)',
+            textDecoration: item.is_packed ? 'line-through' : 'none',
+          }}>
+            {item.name}
+          </span>
+          {item.notes && (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{item.notes}</p>
+          )}
+          {assignedName && (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+              Assigned to {assignedName}
+            </p>
+          )}
+        </div>
       </div>
-      <div style={{ flex: 1 }}>
-        <span style={{
-          fontSize: 14, color: 'var(--text-primary)',
-          textDecoration: item.is_packed ? 'line-through' : 'none',
-        }}>
-          {item.name}
-        </span>
-        {item.notes && (
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{item.notes}</p>
-        )}
-      </div>
+      <button
+        onClick={onDelete}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          padding: 6, borderRadius: 6, color: 'var(--text-muted)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        </svg>
+      </button>
     </div>
   );
 }

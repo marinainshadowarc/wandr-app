@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { logActivity } from '../lib/activityLogger';
 
 // Postgres time type returns '08:00:00' — trim to 'HH:MM'
 const fmtTime = t => (t ? t.slice(0, 5) : '');
@@ -59,6 +60,7 @@ export function useItinerary(tripId) {
         .sort((a, b) => a.day - b.day);
     });
 
+    logActivity(item.trip_id, `added_${item.type}:${item.title}`, 'itinerary');
     return formatted;
   };
 
@@ -89,16 +91,26 @@ export function useItinerary(tripId) {
         .sort((a, b) => a.day - b.day);
     });
 
+    logActivity(item.trip_id, `updated_${item.type}:${item.title}`, 'itinerary');
     return formatted;
   };
 
   const deleteItem = async (id) => {
+    // Capture item info before deletion for activity log
+    let deletedItem;
+    for (const g of days) {
+      deletedItem = g.items.find(i => i.id === id);
+      if (deletedItem) break;
+    }
     const { error: err } = await supabase.from('itinerary_items').delete().eq('id', id);
     if (err) throw err;
     setDays(prev => prev
       .map(g => ({ ...g, items: g.items.filter(i => i.id !== id) }))
       .filter(g => g.items.length > 0)
     );
+    if (deletedItem) {
+      logActivity(deletedItem.trip_id, `deleted_${deletedItem.type}:${deletedItem.title}`, 'itinerary');
+    }
   };
 
   return { days, loading, error, addItem, updateItem, deleteItem };
